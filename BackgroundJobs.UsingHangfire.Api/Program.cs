@@ -29,9 +29,9 @@ builder.Services.AddHangfire(config =>
     config.UseSimpleAssemblyNameTypeSerializer();
     config.UseRecommendedSerializerSettings();
     // use this for SQL Server 
-    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("Default"));
+    // config.UseSqlServerStorage(builder.Configuration.GetConnectionString("Default"));
     // use this for SQLite storage 
-    // config.UseSQLiteStorage(builder.Configuration.GetConnectionString("Default")); //.UseSQLiteStorage();
+    config.UseSQLiteStorage(builder.Configuration.GetConnectionString("SqliteConn")); //.UseSQLiteStorage();
 });
 builder.Services.AddHangfireServer();
 

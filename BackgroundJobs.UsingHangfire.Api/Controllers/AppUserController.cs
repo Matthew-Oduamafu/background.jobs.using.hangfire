@@ -1,5 +1,8 @@
-﻿using BackgroundJobs.UsingHangfire.Api.Contracts;
+﻿using System.Net.Mail;
+using BackgroundJobs.UsingHangfire.Api.Contracts;
 using BackgroundJobs.UsingHangfire.Api.Models;
+using FluentEmail.Smtp;
+using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackgroundJobs.UsingHangfire.Api.Controllers;
@@ -36,23 +39,23 @@ public class AppUserController : ControllerBase
 
         try
         {
-            Email email = new()
+            Email mail = new()
             {
                 To = user.EmailAddress,
-                Subject = emailSubject,
-                Body = emailContent,
-                HtmlContent = htmlContent
+                Subject = EmailSubject,
+                Body = EmailContent,
+                HtmlContent = HtmlContent,
             };
 
-          var response =   await _emailSender.Send(email);
-          if(response) Console.WriteLine("Message sent successfully");
+            var jobId = BackgroundJob.Enqueue<IEmailSender>(x => x.SendSmtp(mail, user));
+
+            Console.WriteLine("Message sent successfully");
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            
         }
-        
+
         return CreatedAtRoute("GetById", new { id = result }, result);
     }
 
@@ -70,9 +73,9 @@ public class AppUserController : ControllerBase
         return NoContent();
     }
 
-    private const string emailSubject = "Subscription to Our Services";
+    private const string EmailSubject = "Subscription to Our Services";
 
-    private const string emailContent = @"Dear [User's Name],
+    private const string EmailContent = @"Dear [User's Name],
 
 Thank you for your interest in subscribing to our services. We are excited to have you as a valued customer and look forward to providing you with top-notch service and support.
 
@@ -96,14 +99,14 @@ Best regards,
 [Your Name]
 [Your Company]";
 
-    private const string htmlContent = @"<!DOCTYPE html>
+    private const string HtmlContent = @"<!DOCTYPE html>
 <html>
 <head>
     <meta charset='UTF-8'>
     <title>Subscription to Our Services</title>
 </head>
 <body>
-    <p>Dear [User's Name],</p>
+    <p>Dear @Model.Name,</p>
     <p>Thank you for your interest in subscribing to our services. We are excited to have you as a valued customer and look forward to providing you with top-notch service and support.</p>
     <p>To complete your subscription, please follow the steps below:</p>
     <ol>

@@ -3,6 +3,7 @@ using System.Net.Mail;
 using System.Text;
 using BackgroundJobs.UsingHangfire.Api.Contracts;
 using BackgroundJobs.UsingHangfire.Api.Models;
+using FluentEmail.Core.Defaults;
 using FluentEmail.Razor;
 using FluentEmail.Smtp;
 using Microsoft.Extensions.Options;
@@ -108,5 +109,30 @@ Team EPAM India";
             .SendAsync();
 
         return email.Successful;
+    }
+
+    public async Task<bool> SendSmtp(Email email, User user)
+    {
+        var emailSender = new SmtpSender(() => new SmtpClient()
+        {
+            Host = "localhost",
+            EnableSsl = false,
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            Port = 25,
+        });
+
+        FluentEmail.Core.Email.DefaultSender = emailSender;
+        FluentEmail.Core.Email.DefaultRenderer = new ReplaceRenderer();
+        StringBuilder builder = new();
+        builder.AppendLine(email.HtmlContent);
+
+        var emailResponse = await FluentEmail.Core.Email
+            .From("mattietorrent@gmail.com")
+            .To(email.To)
+            .Subject(email.Subject)
+            .UsingTemplate(builder.ToString(), user)
+            .SendAsync();
+
+        return emailResponse.Successful;
     }
 }
