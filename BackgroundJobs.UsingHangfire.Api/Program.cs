@@ -3,6 +3,7 @@ using BackgroundJobs.UsingHangfire.Api.Models;
 using BackgroundJobs.UsingHangfire.Api.Services;
 using Hangfire;
 using Hangfire.Storage.SQLite;
+using HangfireBasicAuthenticationFilter;
 using Microsoft.EntityFrameworkCore;
 using HangfireDbContext = BackgroundJobs.UsingHangfire.Api.Data.HangfireDbContext;
 
@@ -58,12 +59,23 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-app.UseHangfireDashboard();
+app.UseHangfireDashboard("/hangfire", new DashboardOptions()
+{
+    DashboardTitle = "Automatic Email Sender",
+    Authorization = new[]
+    {
+        new HangfireCustomBasicAuthenticationFilter()
+        {
+            Pass = "mattie",
+            User = "Bra Euler"
+        }
+    }
+});
 app.MapHangfireDashboard();
 
 // Recurring background Task
 #pragma warning disable CS0618
-RecurringJob.AddOrUpdate<IEmailSender>(x=>x.SendBatchMailSmtp(),"0 * * ? * *" );
+RecurringJob.AddOrUpdate<IEmailSender>(x => x.SendBatchMailSmtp(), "0 * * ? * *");
 #pragma warning restore CS0618
 
 app.Run();
